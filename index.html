@@ -1913,4 +1913,13 @@ async function accountRequest49(path,payload){const response=await fetch(path,{m
 function accountOpen49(){accountModal49.classList.add('open-account49');$('accountStatus49').textContent=accountToken49?'Signed in for this browser.':'Use the hosted game server to create an account.';}
 accountButton49.onclick=accountOpen49;accountModal49.querySelector('.close').onclick=()=>accountModal49.classList.remove('open-account49');
 for(const [id,path,label] of [['register49','/api/auth/register','Account created'],['login49','/api/auth/login','Signed in']])$(id).onclick=async()=>{const status=$('accountStatus49');status.textContent='Working…';try{const result=await accountRequest49(path,{username:$('accountName49').value,password:$('accountPassword49').value});localStorage.setItem('empires_account_token',result.token);accountButton49.textContent='👤 '+result.user.username;status.textContent=label+' as '+result.user.username+'.';}catch(error){status.textContent=error.message;}};
+
+// Start with a clean map: the tile inspector only opens after a real tile click.
+clearTileSelection47();
+
+// Founding is a gated setup flow: no fictional country or tile controls before it exists.
+const foundingGateStyle50=document.createElement('style');foundingGateStyle50.textContent='body.prefounding50 #tileInspector37,body.prefounding50 #divisionCard43,body.prefounding50 #constructionDock40,body.prefounding50 #countryIdentity43{display:none!important}body.prefounding50 #accountButton49{display:none!important}body.prefounding50 #accountModal49{display:grid!important}body.prefounding50 #accountModal49 .close{display:none!important}';document.head.append(foundingGateStyle50);
+function unlockFounding50(){document.body.classList.remove('prefounding50');accountModal49.classList.remove('open-account49');}
+if(!state.spawn){document.body.classList.add('prefounding50');accountModal49.querySelector('h2').textContent='Create your EMPIRES account';accountModal49.querySelector('p').textContent='Create an account or sign in before choosing your land and founding a civilization.';}
+for(const id of ['register49','login49']){const prior=$(id).onclick;$(id).onclick=async()=>{await prior();if(localStorage.getItem('empires_account_token'))unlockFounding50();};}
 </script></body></html>
