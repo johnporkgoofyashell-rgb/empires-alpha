@@ -2040,7 +2040,10 @@ async function restoreSavedLogin54(){const token=localStorage.getItem('empires_a
 setTimeout(restoreSavedLogin54,0);
 
 // Alpha 5.4: servers receive a code before play begins; only their host starts them.
-let isServerHost54=false,serverPoll54=null;
+// Keep the host role through the intentional fresh-world reload that happens
+// after a new invite server is created. This makes Start game available before
+// anyone enters the match.
+let isServerHost54=localStorage.getItem('empires_server_host')==='1',serverPoll54=null;
 const startServer54=document.createElement('button');startServer54.id='startServer54';startServer54.textContent='Start game';startServer54.style.display='none';serverBox52.append(startServer54);
 const startLobby54=document.createElement('button');startLobby54.id='startLobby54';startLobby54.textContent='Start game';startLobby54.style.display='none';$('lobbyStatus53').after(startLobby54);
 function renderServerStart54(){const ready=!!serverId52&&isServerHost54;startServer54.style.display=ready?'inline-block':'none';startLobby54.style.display=ready?'inline-block':'none';serverBadge53.textContent=serverId52?'Server '+serverId52:'';}
