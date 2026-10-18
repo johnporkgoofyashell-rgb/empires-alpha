@@ -1,0 +1,8 @@
+{
+  "name": "empires-alpha",
+  "version": "3.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"start": "node server.js", "dev": "node server.js"},
+  "engines": {"node": ">=20"}
+}
