@@ -2033,4 +2033,9 @@ $('lobbyJoin53').onclick=async()=>{if(!localStorage.getItem('empires_account_tok
 $('lobbyAccount53').onclick=()=>accountOpen49();
 leaveServer53.onclick=()=>{worldStream50?.close();worldStream50=null;localStorage.removeItem('empires_server_id');serverId52='';clearOnline52();serverBadge53.textContent='';showLobby53('You left the game. Create a new game or join one with a code.');};
 if(!serverId52&&state.spawn&&localStorage.getItem('empires_account_token'))showLobby53();else if(serverId52)hideLobby53();
+
+// Restore a previously authenticated browser automatically.  A bad or expired token
+// is removed cleanly so the player is shown the Account button instead of a broken lobby.
+async function restoreSavedLogin54(){const token=localStorage.getItem('empires_account_token');if(!token){serverStatus52('Sign in or create an account before joining a game.');return;}try{const response=await fetch('/api/me',{headers:authHeaders50()});if(!response.ok)throw Error('expired');const data=await response.json();accountButton49.textContent='👤 '+data.user.username;localStorage.setItem('empires_player_id',data.user.id);serverStatus52(serverId52?'Signed in · server '+serverId52+'.':'Signed in as '+data.user.username+'. Create or join a game.');if(serverId52){await connectServer52();hideLobby53();}else if(state.spawn)showLobby53('Signed in as '+data.user.username+'. Create a game or join with a code.');}catch{localStorage.removeItem('empires_account_token');localStorage.removeItem('empires_player_id');serverId52='';localStorage.removeItem('empires_server_id');serverStatus52('Your saved session has expired. Sign in again to create or join a game.');if(state.spawn)showLobby53('Sign in through Account, then create or join a game.');}}
+setTimeout(restoreSavedLogin54,0);
 </script></body></html>

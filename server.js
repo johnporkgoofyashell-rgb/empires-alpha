@@ -6,11 +6,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scrypt=promisify(scryptCallback),root=path.dirname(fileURLToPath(import.meta.url)),port=Number(process.env.PORT||8835);
-const dataDir=process.env.DATA_DIR||path.join(root,'data'),usersFile=path.join(dataDir,'users.json'),sessions=new Map(),rooms=new Map(),worlds=new Map(),servers=new Map();
+const dataDir=process.env.DATA_DIR||path.join(root,'data'),usersFile=path.join(dataDir,'users.json'),sessionsFile=path.join(dataDir,'sessions.json'),sessions=new Map(),rooms=new Map(),worlds=new Map(),servers=new Map();
 const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(body));};
 const body=req=>new Promise((resolve,reject)=>{let raw='';req.on('data',part=>{raw+=part;if(raw.length>100000)reject(Error('Request too large'));});req.on('end',()=>{try{resolve(raw?JSON.parse(raw):{});}catch{reject(Error('Invalid JSON'));}});});
 async function users(){try{return JSON.parse(await readFile(usersFile,'utf8'));}catch{return []}}
 async function saveUsers(value){await mkdir(dataDir,{recursive:true});await writeFile(usersFile,JSON.stringify(value,null,2));}
+async function loadSessions(){try{for(const [token,id] of Object.entries(JSON.parse(await readFile(sessionsFile,'utf8'))))sessions.set(token,id);}catch{}}
+async function saveSessions(){await mkdir(dataDir,{recursive:true});await writeFile(sessionsFile,JSON.stringify(Object.fromEntries(sessions),null,2));}
+await loadSessions();
 async function passwordHash(password,salt=randomBytes(16).toString('hex')){return {salt,hash:(await scrypt(password,salt,64)).toString('hex')}}
 async function authenticate(req,url){const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'')||url?.searchParams.get('token')||'';const id=sessions.get(token);return id?(await users()).find(user=>user.id===id):null;}
 function sendRoom(room,event){for(const client of rooms.get(room)||[])client.write('event: room\ndata: '+JSON.stringify(event)+'\n\n');}
@@ -18,10 +21,10 @@ const server=http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://localhost');
  if(req.method==='POST'&&url.pathname==='/api/auth/register'){
   const {username,password}=await body(req),name=String(username||'').trim();if(!/^[a-zA-Z0-9_]{3,24}$/.test(name)||String(password||'').length<8)return json(res,400,{error:'Use a 3–24 character username and an 8+ character password.'});
-  const all=await users();if(all.some(user=>user.username.toLowerCase()===name.toLowerCase()))return json(res,409,{error:'Username already exists.'});const credential=await passwordHash(password),user={id:randomBytes(12).toString('hex'),username:name,...credential,createdAt:Date.now()};all.push(user);await saveUsers(all);const token=randomBytes(32).toString('hex');sessions.set(token,user.id);return json(res,201,{token,user:{id:user.id,username:user.username}});
+  const all=await users();if(all.some(user=>user.username.toLowerCase()===name.toLowerCase()))return json(res,409,{error:'Username already exists.'});const credential=await passwordHash(password),user={id:randomBytes(12).toString('hex'),username:name,...credential,createdAt:Date.now()};all.push(user);await saveUsers(all);const token=randomBytes(32).toString('hex');sessions.set(token,user.id);await saveSessions();return json(res,201,{token,user:{id:user.id,username:user.username}});
  }
  if(req.method==='POST'&&url.pathname==='/api/auth/login'){
-  const {username,password}=await body(req),user=(await users()).find(item=>item.username.toLowerCase()===String(username||'').toLowerCase());if(!user)return json(res,401,{error:'Invalid username or password.'});const candidate=await passwordHash(password,user.salt);if(!timingSafeEqual(Buffer.from(candidate.hash,'hex'),Buffer.from(user.hash,'hex')))return json(res,401,{error:'Invalid username or password.'});const token=randomBytes(32).toString('hex');sessions.set(token,user.id);return json(res,200,{token,user:{id:user.id,username:user.username}});
+  const {username,password}=await body(req),user=(await users()).find(item=>item.username.toLowerCase()===String(username||'').toLowerCase());if(!user)return json(res,401,{error:'Invalid username or password.'});const candidate=await passwordHash(password,user.salt);if(!timingSafeEqual(Buffer.from(candidate.hash,'hex'),Buffer.from(user.hash,'hex')))return json(res,401,{error:'Invalid username or password.'});const token=randomBytes(32).toString('hex');sessions.set(token,user.id);await saveSessions();return json(res,200,{token,user:{id:user.id,username:user.username}});
  }
  if(req.method==='GET'&&url.pathname==='/api/me'){const user=await authenticate(req);return user?json(res,200,{user:{id:user.id,username:user.username}}):json(res,401,{error:'Sign in required.'});}
  if(req.method==='POST'&&url.pathname==='/api/servers/create'){const user=await authenticate(req);if(!user)return json(res,401,{error:'Sign in required.'});let code;do{code=randomBytes(4).toString('hex').toUpperCase().slice(0,6);}while(servers.has(code));servers.set(code,{owner:user.id,createdAt:Date.now()});worlds.set(code,new Map());return json(res,201,{code});}
