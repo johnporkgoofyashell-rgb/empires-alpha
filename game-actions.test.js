@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {applyAction,findPath,validateAction} from '../game-actions.js';
+const base=()=>({owned:[[1,1]],buildings:[],wood:100,stone:50,jobs:[]});
+const claim=(requestId='claim-1')=>({type:'claim',requestId,x:2,z:1,cost:{wood:18,stone:8}});
+test('claim cannot be applied twice',()=>{const once=applyAction(base(),claim());assert.equal(once.ok,true);assert.equal(applyAction(once.data.state,claim()).code,'duplicate');});
+test('two players cannot claim one territory',()=>assert.equal(validateAction(base(),claim(),{ownedByOther:new Set(['2,1'])}).code,'territory_conflict'));
+test('construction rejects insufficient resources',()=>assert.equal(applyAction({...base(),wood:5},{type:'begin_construction',requestId:'build-1',cost:{wood:25},job:{kind:'build',type:'house',x:1,z:1}}).code,'insufficient_resources'));
+test('network retries retain a single deduction',()=>{const result=applyAction(base(),claim('retry'));assert.equal(result.data.state.wood,82);assert.equal(applyAction(result.data.state,claim('retry')).ok,false);});
+test('invalid military order is rejected',()=>assert.equal(validateAction(base(),{type:'military_order',requestId:'move',divisionId:'d1',x:2.5,z:4}).code,'invalid_order'));
+test('construction state survives serialization for an interrupted save',()=>{const built=applyAction(base(),{type:'begin_construction',requestId:'build-save',cost:{wood:25},job:{kind:'build',type:'house',x:1,z:1},now:10,endsAt:20});assert.equal(JSON.parse(JSON.stringify(built.data.state)).constructionJob.type,'house');});
+test('pathfinding returns no route through a blocked destination',()=>assert.deepEqual(findPath({x:0,z:0},{x:2,z:0},(x,z)=>!(x===2&&z===0)),[]));
