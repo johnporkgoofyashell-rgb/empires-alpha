@@ -10,7 +10,8 @@
 #foundingLayout{display:grid;grid-template-columns:minmax(0,1fr)250px;gap:18px}#earthMap{background:#173c56;border:2px solid #527985;border-radius:12px;display:block;width:100%;height:auto;aspect-ratio:2/1;cursor:crosshair;touch-action:manipulation}
 #earthMap path{fill:#5c9665;stroke:#a5bd90;stroke-width:.38;vector-effect:non-scaling-stroke}#earthMap path:hover{fill:#b4bb6d}#spawnMarker{pointer-events:none}
 #foundingControls{display:flex;flex-direction:column;gap:12px}#foundingControls input{width:100%}#foundingControls button{padding:13px;font-weight:700}#foundingControls label{color:#e3d8b5;font-size:13px}#foundingControls small{color:#a5bbb5;line-height:1.5}
-#spawnLocation{font-size:17px;font-weight:700;color:#f0d398;min-height:52px}#foundingStatus{color:#d2c5a0;font-size:12px}#view canvas{position:relative;z-index:0}
+#spawnLocation{font-size:17px;font-weight:700;color:#f0d39898
+
 @media(max-width:750px){#foundingLayout{grid-template-columns:1fr}#foundingCard{padding:12px}#foundingCard h2{font-size:21px}}
 </style><style id="alpha06-theme">
 :root{--gold:#d9b978;--panel:#101e22;--edge:#52604f}
@@ -96,7 +97,7 @@ header h1{letter-spacing:.13em;color:#f0dca8!important}
 <div id="foundingOverlay" role="dialog" aria-modal="true" aria-label="Choose your starting location"><div id="foundingCard"><h2>🌍 FOUND YOUR CIVILIZATION</h2><p>Choose a starting location in Europe. Your first five settlers will establish a 3D settlement in that region.</p><div id="foundingLayout"><svg id="earthMap" viewBox="458 43 160 119" preserveAspectRatio="xMidYMid meet" aria-label="Interactive Europe founding map"><rect width="1000" height="500" fill="#1a435e"/><g id="worldShapes"></g><g id="spawnMarker" visibility="hidden"><circle r="11" fill="none" stroke="#fff4b2" stroke-width="3"/><circle r="5" fill="#efb751"/></g></svg><div id="foundingControls"><label>COUNTRY NAME<input id="foundingName" maxlength="32" value="New Dawn"></label><label>NATIONAL TERRITORY COLOR<input id="foundingColor" type="color" value="#c9a34f"></label><div id="spawnLocation">Select a location in Europe</div><small>Land outlines use Natural Earth geographic data. The playable region is a Europe-based 161 × 161 tile map. Exploration and claiming remain separate.</small><button id="foundCountry" disabled>⚑ Establish settlement</button><div id="foundingStatus">Loading world coastlines…</div></div></div></div></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
+
 const $=id=>document.getElementById(id), KEY='empires_alpha_05', OLD='empires_alpha_01', PREVIOUS='empires_alpha_02', N=161, SIZE=10.5, HALF=(N-1)/2, claimCost={wood:18,stone:8};
 const cost={barracks:{wood:55,stone:35},house:{wood:25},farm:{wood:15},lumber:{wood:20},quarry:{wood:20,stone:10},library:{wood:35,stone:20}};
 const jobInfo={farmer:{label:'🌾 Farmer',building:'farm'},woodcutter:{label:'🪓 Woodcutter',building:'lumber'},miner:{label:'⛏ Miner',building:'quarry'},builder:{label:'🔨 Builder',building:'town'},scholar:{label:'📜 Scholar',building:'library'}};const names={town:'Town Hall',house:'House',farm:'Farm',lumber:'Lumber Camp',quarry:'Quarry',library:'Study Hall',barracks:'Barracks'};
